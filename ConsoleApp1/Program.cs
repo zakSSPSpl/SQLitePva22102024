@@ -9,7 +9,7 @@ internal class Program
     {
         Console.WriteLine("Hello, World!");
 
-        SqliteConnectionStringBuilder builder = new() { DataSource = @"c:\Users\novotny.an.2022\produkty.db", Mode = SqliteOpenMode.ReadWriteCreate };
+        SqliteConnectionStringBuilder builder = new() { DataSource = @"c:\Users\user\produkty.db", Mode = SqliteOpenMode.ReadWriteCreate };
 
         using (IDbConnection db = new SqliteConnection(builder.ToString()))
         {
@@ -42,8 +42,6 @@ internal class Program
 
             db.Close();
         }
-
-
     }
 
     public static bool InsertIntoDB(IDbConnection dbConnection, Product newProduct)
@@ -52,17 +50,17 @@ internal class Program
 
         IDbCommand cmd = dbConnection.CreateCommand();
 
-        cmd.Parameters["@cnazev"] = newProduct.Name;
-        cmd.Parameters["@cserial"] = newProduct.Serial;
-        cmd.Parameters["@cpopis"] = newProduct.Description;
-        cmd.Parameters["@cdatum_naskladneni"] = newProduct.Inbound.ToString();
-        cmd.Parameters["@cvyrobce"] = newProduct.Producer;
-        cmd.Parameters["@ccena"] = newProduct.Price.ToString();
+        cmd.Parameters["$cnazev"] = newProduct.Name;
+        cmd.Parameters["$cserial"] = newProduct.Serial;
+        cmd.Parameters["$cpopis"] = newProduct.Description;
+        cmd.Parameters["$cdatum_naskladneni"] = newProduct.Inbound.ToString();
+        cmd.Parameters["$cvyrobce"] = newProduct.Producer;
+        cmd.Parameters["$ccena"] = newProduct.Price.ToString();
 
 
         cmd.CommandText = """
             INSERT INTO Produkty(nazev, serial, popis, datum_naskladneni, vyrobce, cena)
-                           VALUES(@cnazev, @cserial, @cpopis, @cdatum_naskladneni, @cvyrobce, @ccena);
+                           VALUES($cnazev, $cserial, $cpopis, $cdatum_naskladneni, $cvyrobce, $ccena);
             """;
 
         try
@@ -87,11 +85,11 @@ internal class Program
 
         IDbCommand cmd = dbConnection.CreateCommand();
 
-        cmd.Parameters["@cserial"] = serialNumber;
+        cmd.Parameters["$cserial"] = serialNumber;
 
         cmd.CommandText = """
             SELECT * FROM Produkty
-            WHERE Produkty.serial=@cserial;
+            WHERE Produkty.serial=$cserial;
             """;
 
         var output = cmd.ExecuteReader();
@@ -109,11 +107,11 @@ internal class Program
 
         IDbCommand cmd = dbConnection.CreateCommand();
 
-        cmd.Parameters["@cid"] = id.ToString();
+        cmd.Parameters["$cid"] = id.ToString();
 
         cmd.CommandText = """
             DELETE FROM Produkty
-            WHERE id=@cid;
+            WHERE id=$cid;
             """;
 
         try
@@ -138,24 +136,24 @@ internal class Program
 
         IDbCommand cmd = dbConnection.CreateCommand();
 
-        cmd.Parameters["@cid"] = id.ToString();
-        cmd.Parameters["@cnazev"] = product.Name;
-        cmd.Parameters["@cserial"] = product.Serial;
-        cmd.Parameters["@cpopis"] = product.Description;
-        cmd.Parameters["@cdatum_naskladneni"] = product.Inbound.ToString();
-        cmd.Parameters["@cvyrobce"] = product.Producer;
-        cmd.Parameters["@ccena"] = product.Price.ToString();
+        cmd.Parameters["$cid"] = id.ToString();
+        cmd.Parameters["$cnazev"] = product.Name;
+        cmd.Parameters["$cserial"] = product.Serial;
+        cmd.Parameters["$cpopis"] = product.Description;
+        cmd.Parameters["$cdatum_naskladneni"] = product.Inbound.ToString();
+        cmd.Parameters["$cvyrobce"] = product.Producer;
+        cmd.Parameters["$ccena"] = product.Price.ToString();
 
         cmd.CommandText = """
             UPDATE Produkty
             SET
-                nazev = @cnazev,
-                serial = @cserial,
-                popis = @cpopis,
-                datum_naskladneni = @cdatum_naskladneni,
-                vyrobce = @cvyrobce,
-                cena = @ccena
-            WHERE id = @cid;
+                nazev = $cnazev,
+                serial = $cserial,
+                popis = $cpopis,
+                datum_naskladneni = $cdatum_naskladneni,
+                vyrobce = $cvyrobce,
+                cena = $ccena
+            WHERE id = $cid;
             """;
 
         try
@@ -179,6 +177,25 @@ internal class Program
         dbConnection.Open();
 
         IDbCommand cmd = dbConnection.CreateCommand();
+
+        cmd.CommandText = """
+            ALTER TABLE Produkty ADD COLUMN zeme_puvodu TEXT;
+            """;
+
+        try
+        {
+            cmd.ExecuteNonQuery();
+
+            return true;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+        finally
+        {
+            dbConnection.Close();
+        }
     }
 
     public class Product
