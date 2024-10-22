@@ -172,7 +172,7 @@ internal class Program
         }
     }
 
-    public static void AlterProducts(IDbConnection dbConnection)
+    public static bool AlterProducts(IDbConnection dbConnection)
     {
         dbConnection.Open();
 
